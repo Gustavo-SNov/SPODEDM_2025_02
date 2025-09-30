@@ -1,7 +1,7 @@
 import { SQLiteDatabase } from "expo-sqlite";
 
 import * as crypto from "expo-crypto";
-import { TodoItem } from "./types";
+import { TodoItem, uuid } from "./types";
 
 
 export async function migrateDB(db:SQLiteDatabase){
@@ -19,8 +19,6 @@ export async function migrateDB(db:SQLiteDatabase){
         initializeDB(db);
         currentDbVersion = 1;
     }
-
-    //Outras atualizações de versão
 
     await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
@@ -55,4 +53,26 @@ export async function getAllTodos(db: SQLiteDatabase): Promise<TodoItem[]> {
     return result;
 }
 
+export async function postToDo(db: SQLiteDatabase,newTask: TodoItem): Promise<TodoItem> {
+    db.execAsync(`
+        INSERT INTO todos (id, text, done, createdAt) 
+        VALUES ('${newTask.id}','${newTask.text}',0,'${newTask.createdAt}');
+        `);
+    return newTask;
+}
 
+export async function deleteToDo(db: SQLiteDatabase, id: uuid): Promise<void> {
+    db.execAsync(`
+        DELETE FROM todos
+        WHERE  id = '${id}';
+        `);
+}
+
+export async function putToDo(db: SQLiteDatabase, updatedTask: TodoItem): Promise<TodoItem> {
+    db.execAsync(`
+        UPDATE todos
+        SET   done = '${updatedTask.done}'
+        WHERE id = '${updatedTask.id}';
+        `);
+    return updatedTask;
+}
